@@ -1,0 +1,185 @@
+@model List<CongDichVuSinhVien.Models.DuLieuHuanLuyenNlp>
+@{
+    Layout = "_LayoutNiceAdmin";
+    ViewData["Title"] = "Ngữ liệu huấn luyện NLP";
+    var dichVus = ViewBag.DichVus as List<CongDichVuSinhVien.Models.DichVu> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1" style="color: #012970;"><i class="bi bi-robot text-primary me-2"></i>BỘ DỮ LIỆU HUẤN
+            LUYỆN NLP</h4>
+            <small class="text-muted">Kho ngữ liệu mẫu giúp trợ lý ảo nhận diện nhu cầu sinh viên</small>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+            <i class="bi bi-plus-circle me-1"></i>Thêm mẫu câu hỏi mới
+        </button>
+    </div>
+
+    <!-- KHỐI TEST DỰ ĐOÁN NLP QUA AJAX -->
+    <div class="card card-nice p-4 mb-4 border-start border-4 border-info">
+        <h6 class="fw-bold text-dark mb-2"><i class="bi bi-lightning-charge text-warning me-1"></i>Kiểm thử thuật toán NLP
+            (AJAX không reload):</h6>
+            <div class="d-flex gap-2">
+                <input type="text" id="txtTestInput" class="form-control"
+                       placeholder="Nhập thử 1 câu bất kỳ (VD: xin điểm gpa, làm thẻ mới, hoãn đi lính...)" />
+                <button type="button" class="btn btn-info text-dark fw-bold px-4" onclick="runNlpTest()">Chạy thử NLP</button>
+            </div>
+            <div id="testResultBox" class="mt-3 p-3 bg-light rounded border d-none"></div>
+        </div>
+
+        <div class="card card-nice p-0 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light small">
+                        <tr>
+                            <th class="ps-3" style="width: 80px;">MÃ</th>
+                            <th style="width: 200px;">THỦ TỤC ÁNH XẠ</th>
+                            <th>CÂU HỎI MẪU / CÁCH NÓI CỦA SINH VIÊN</th>
+                            <th class="text-end pe-3" style="width: 120px;">THAO TÁC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var nlp in Model)
+                        {
+                            <tr id="row_@nlp.MaMau">
+                                <td class="ps-3 text-muted small">#@nlp.MaMau</td>
+                                <td><span class="badge bg-light text-primary border border-primary">@nlp.KyHieuDichVu</span></td>
+                                <td><span class="fw-semibold text-dark">@nlp.CauHoiMau</span></td>
+                                <td class="text-end pe-3">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(@nlp.MaMau)"><i
+                                        class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteItem(@nlp.MaMau)"><i
+                                            class="bi bi-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- PHÂN TRANG -->
+                    @if (ViewBag.TongSoTrang > 1)
+                    {
+                        <div class="d-flex justify-content-end p-3 border-top">
+                            <ul class="pagination pagination-sm mb-0">
+                                @for (int i = 1; i <= ViewBag.TongSoTrang; i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.TrangHienTai ? "active" : "")">
+                                        <a class="page-link" href="@Url.Action("Index", new { trang = i, tuKhoa = ViewBag.TuKhoa })">@i</a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+
+                <!-- MODAL AJAX THÊM / SỬA MẪU NLP -->
+                <div class="modal fade" id="modalNlp" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h6 class="modal-title fw-bold" id="modalTitle">MẪU CÂU HỎI NLP</h6>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="hidden" id="txtMaMau" value="0" />
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Ánh xạ tới Thủ tục</label>
+                                    <select id="slDichVu" class="form-select">
+                                        @foreach (var dv in dichVus)
+                                        {
+                                            <option value="@dv.KyHieuDichVu">@dv.TenDichVu (@dv.KyHieuDichVu)</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Câu hỏi tự nhiên của sinh viên *</label>
+                                    <textarea id="txtCauHoiMau" class="form-control" rows="3"
+                                              placeholder="VD: em muốn xin kết quả bảng điểm..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                                <button type="button" class="btn btn-primary btn-sm fw-bold" onclick="saveData()">Lưu mẫu NLP</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @section Scripts {
+                    <script>
+                        const modalEl = new bootstrap.Modal(document.getElementById('modalNlp'));
+
+                        function openAddModal() {
+                            document.getElementById('modalTitle').innerText = "THÊM CÂU HỎI MẪU MỚI";
+                            document.getElementById('txtMaMau').value = 0;
+                            document.getElementById('txtCauHoiMau').value = "";
+                            modalEl.show();
+                        }
+
+                        async function openEditModal(id) {
+                            const res = await fetch(`/Admin/QuanLyNlp/GetJson/${id}`);
+                            const data = await res.json();
+                            document.getElementById('modalTitle').innerText = "SỬA CÂU HỎI MẪU";
+                            document.getElementById('txtMaMau').value = data.maMau;
+                            document.getElementById('slDichVu').value = data.kyHieuDichVu;
+                            document.getElementById('txtCauHoiMau').value = data.cauHoiMau;
+                            modalEl.show();
+                        }
+
+                        async function saveData() {
+                            const payload = {
+                                maMau: parseInt(document.getElementById('txtMaMau').value),
+                                kyHieuDichVu: document.getElementById('slDichVu').value,
+                                cauHoiMau: document.getElementById('txtCauHoiMau').value
+                            };
+                            const res = await fetch('/Admin/QuanLyNlp/SaveAjax', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                            const result = await res.json();
+                            if (result.success) {
+                                Swal.fire('Thành công', result.message, 'success').then(() => location.reload());
+                            }
+                        }
+
+                        async function deleteItem(id) {
+                            const confirm = await Swal.fire({ title: 'Xác nhận xóa?', icon: 'warning', showCancelButton: true });
+                            if (confirm.isConfirmed) {
+                                const res = await fetch(`/Admin/QuanLyNlp/DeleteAjax/${id}`, { method: 'POST' });
+                                const result = await res.json();
+                                if (result.success) {
+                                    document.getElementById(`row_${id}`).remove();
+                                    Swal.fire('Đã xóa', '', 'success');
+                                }
+                            }
+                        }
+
+                        async function runNlpTest() {
+                            const text = document.getElementById('txtTestInput').value;
+                            if (!text) return;
+                            const res = await fetch('/Admin/QuanLyNlp/TestAjax', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(text)
+                            });
+                            const data = await res.json();
+                            const box = document.getElementById('testResultBox');
+                            box.classList.remove('d-none');
+                            if (data.length === 0) {
+                                box.innerHTML = `<span class="text-danger small">Không khớp thủ tục nào (&lt; 5%).</span>`;
+                            } else {
+                                let html = '<div class="small fw-bold text-muted mb-2">Kết quả phân tích độ khớp:</div>';
+                                data.forEach(r => {
+                                    html += `<div class="d-flex justify-content-between align-items-center mb-1 small">
+                                                    <span><strong>${r.dichVu.tenDichVu}</strong> (${r.dichVu.kyHieuDichVu}) - <em>${r.cauHoiKhopNhat}</em></span>
+                                                    <span class="badge bg-success">Khớp: ${r.diemTuongDong}%</span>
+                                                 </div>`;
+                                });
+                                box.innerHTML = html;
+                            }
+                        }
+                    </script>
+                }

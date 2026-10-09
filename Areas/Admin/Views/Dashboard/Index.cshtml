@@ -1,0 +1,163 @@
+@model List<CongDichVuSinhVien.Models.HoSoDichVu>
+@{
+    Layout = "_LayoutNiceAdmin";
+    ViewData["Title"] = "Bảng điều khiển hệ thống";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1" style="color: #012970;">BẢNG ĐIỀU KHIỂN HỆ THỐNG</h4>
+        <small class="text-muted">Tổng quan tình hình tiếp nhận và xử lý dịch vụ hành chính điện tử</small>
+    </div>
+    <a asp-area="Admin" asp-controller="QuanLyHoSo" asp-action="Index" class="btn btn-primary btn-sm">
+        <i class="bi bi-journal-check me-1"></i>Quản lý xét duyệt ngay
+    </a>
+</div>
+
+<!-- 4 THẺ SỐ LIỆU CHÍNH -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card card-nice p-3 border-start border-4 border-primary">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle p-3 bg-primary-subtle text-primary me-3"><i
+                    class="bi bi-folder2-open fs-3"></i></div>
+                    <div>
+                        <div class="text-muted small fw-bold">TỔNG HỒ SƠ</div>
+                        <h3 class="fw-bold mb-0 text-dark">@ViewBag.TongHoSo</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-nice p-3 border-start border-4 border-warning">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle p-3 bg-warning-subtle text-warning me-3"><i
+                        class="bi bi-hourglass-split fs-3"></i></div>
+                        <div>
+                            <div class="text-muted small fw-bold">CHỜ TIẾP NHẬN</div>
+                            <h3 class="fw-bold mb-0 text-dark">@ViewBag.ChoTiepNhan</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-nice p-3 border-start border-4 border-info">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle p-3 bg-info-subtle text-info me-3"><i
+                            class="bi bi-gear-wide-connected fs-3"></i></div>
+                            <div>
+                                <div class="text-muted small fw-bold">ĐANG XỬ LÝ</div>
+                                <h3 class="fw-bold mb-0 text-dark">@ViewBag.DangXuLy</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card card-nice p-3 border-start border-4 border-success">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-circle p-3 bg-success-subtle text-success me-3"><i
+                                class="bi bi-check2-circle fs-3"></i></div>
+                                <div>
+                                    <div class="text-muted small fw-bold">ĐÃ DUYỆT XONG</div>
+                                    <h3 class="fw-bold mb-0 text-dark">@ViewBag.HoanThanh</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BIỂU ĐỒ & HỒ SƠ MỚI -->
+                <div class="row g-4">
+                    <!-- CỘT TRÁI: DANH SÁCH MỚI NHẤT -->
+                    <div class="col-lg-8">
+                        <div class="card card-nice p-4 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0" style="color: #012970;"><i class="bi bi-clock-history me-2"></i>Hồ sơ mới gửi
+                                    gần đây</h5>
+                                    <a asp-area="Admin" asp-controller="QuanLyHoSo" asp-action="Index"
+                                       class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light small">
+                                            <tr>
+                                                <th>MÃ HỒ SƠ</th>
+                                                <th>SINH VIÊN</th>
+                                                <th>THỦ TỤC</th>
+                                                <th>NGÀY NỘP</th>
+                                                <th>TRẠNG THÁI</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in Model)
+                                            {
+                                                <tr>
+                                                    <td class="fw-bold text-primary font-monospace">@item.MaTraCuu</td>
+                                                    <td>@item.MaSinhVienNavigation?.MaNguoiDungNavigation?.HoTen</td>
+                                                    <td>
+                                                        <div class="text-truncate" style="max-width: 220px;">@item.MaDichVuNavigation?.TenDichVu
+                                                        </div>
+                                                    </td>
+                                                    <td class="small text-muted">@item.NgayNop?.ToString("dd/MM HH:mm")</td>
+                                                    <td>
+                                                        @if (item.TrangThai == "Chờ tiếp nhận")
+                                                        {
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis">Chờ tiếp nhận</span>
+                                                        }
+                                                        else if (item.TrangThai == "Đang xử lý")
+                                                        {
+
+                                                            <span class="badge bg-info-subtle text-info-emphasis">Đang xử lý</span>
+                                                        }
+                                                        else if (item.TrangThai == "Hoàn thành")
+                                                        {
+
+                                                            <span class="badge bg-success-subtle text-success">Hoàn thành</span>
+                                                        }
+                                                        else
+                                                        {
+
+                                                            <span class="badge bg-danger-subtle text-danger">Từ chối</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CỘT PHẢI: BIỂU ĐỒ TRỰC QUAN TỶ LỆ HỒ SƠ -->
+                        <div class="col-lg-4">
+                            <div class="card card-nice p-4 h-100">
+                                <h5 class="fw-bold mb-3" style="color: #012970;"><i class="bi bi-pie-chart me-2"></i>Tỷ lệ trạng thái hồ sơ
+                                </h5>
+                                <div style="height: 260px; position: relative;">
+                                    <canvas id="chartHoSo"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @section Scripts {
+                        <script>
+                            const ctx = document.getElementById('chartHoSo').getContext('2d');
+                            new Chart(ctx, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: ['Chờ tiếp nhận', 'Đang xử lý', 'Hoàn thành', 'Từ chối'],
+                                    datasets: [{
+                                        data: [@ViewBag.ChoTiepNhan, @ViewBag.DangXuLy, @ViewBag.HoanThanh, @ViewBag.TuChoi],
+                                        backgroundColor: ['#ffc107', '#0dcaf0', '#198754', '#dc3545'],
+                                        borderWidth: 2
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { position: 'bottom' } }
+                                }
+                            });
+                        </script>
+                    }

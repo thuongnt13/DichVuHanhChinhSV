@@ -1,0 +1,49 @@
+@model CongDichVuSinhVien.Models.HoSoDichVu
+@{
+    ViewData["Title"] = "Nộp hồ sơ thành công";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-lg text-center p-4 rounded-3 bg-white">
+                <div class="my-3">
+                    <i class="fa fa-check-circle text-success" style="font-size: 4.5rem;"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-1">NỘP HỒ SƠ THÀNH CÔNG!</h4>
+                <p class="text-muted small">Hồ sơ của bạn đã được chuyển tới bộ phận một cửa để xử lý.</p>
+
+                <!-- KHỐI MÃ TRA CỨU -->
+                <div class="p-3 my-3 rounded bg-light border border-2 border-primary border-opacity-25">
+                    <span class="small text-muted d-block text-uppercase fw-semibold">Mã số hồ sơ / Mã tra cứu của
+                        bạn:</span>
+                        <span class="fs-3 fw-bold text-primary letter-spacing-1">@Model.MaTraCuu</span>
+                        <small class="d-block text-secondary mt-1">Lưu lại mã này để tra cứu tình trạng giải quyết hồ
+                            sơ.</small>
+                        </div>
+
+                        <div class="text-start bg-light p-3 rounded small mb-4">
+                            <div class="mb-2"><strong>Thủ tục:</strong> @Model.MaDichVuNavigation?.TenDichVu</div>
+                            <div class="mb-2"><strong>Thời gian nộp:</strong> @Model.NgayNop?.ToString("dd/MM/yyyy HH:mm:ss")
+                            </div>
+                            <div class="mb-2"><strong>Đơn vị xử lý:</strong> @Model.MaDichVuNavigation?.DonViXuLy</div>
+                            <div>
+                                <strong>Trạng thái ban đầu:</strong>
+                                <span class="badge bg-warning text-dark">@Model.TrangThai</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-center">
+                            <a href="@Url.Action("Index", "Home", new { maTraCuu = Model.MaTraCuu })#tra-cuu"
+                               class="btn btn-outline-primary px-3">
+                                <i class="fa fa-search me-1"></i> Tra cứu hồ sơ này
+                            </a>
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-primary px-4"
+                               style="background-color: #005691;">
+                                Về trang chủ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>

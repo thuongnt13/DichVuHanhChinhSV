@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "Trang chủ - Cổng Dịch vụ hành chính cho Sinh viên";
+}
+
+<!-- COMPONENT 1: BANNER TÌM KIẾM NLP -->
+@await Component.InvokeAsync("NlpBanner", new { tuKhoa = ViewBag.TuKhoa })
+
+<!-- COMPONENT 2: THỐNG KÊ TIẾN ĐỘ -->
+@await Component.InvokeAsync("ThongKeHeThong")
+
+<!-- COMPONENT 3: DANH SÁCH THỦ TỤC & PHÂN TÍCH Ý ĐỊNH NLP -->
+@await Component.InvokeAsync("DanhSachThuTuc", new
+{
+    tuKhoa = ViewBag.TuKhoa,
+    maLinhVuc = ViewBag.MaLinhVuc,
+    trang = ViewBag.Trang ?? 1
+})

@@ -1,0 +1,127 @@
+@model CongDichVuSinhVien.Models.DichVu
+@{
+    ViewData["Title"] = "Chi tiết: " + Model.TenDichVu;
+    var cauHoiNLP = ViewBag.CauHoiNLP as List<CongDichVuSinhVien.Models.DuLieuHuanLuyenNlp> ?? new();
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Trang
+                chủ</a></li>
+                <li class="breadcrumb-item"><a href="/#thu-tuc-hanh-chinh" class="text-decoration-none">Thủ tục hành
+                    chính</a></li>
+                    <li class="breadcrumb-item active text-truncate" style="max-width: 400px;">@Model.TenDichVu</li>
+                </ol>
+            </nav>
+
+            <div class="row g-4">
+                <!-- Cột trái: Nội dung chi tiết thủ tục -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm p-4 bg-white mb-4">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-primary fs-6">@Model.KyHieuDichVu</span>
+                            <span class="badge bg-light text-dark border">@Model.MaLinhVucNavigation?.TenLinhVuc</span>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-3" style="color: #002b5b !important;">@Model.TenDichVu</h3>
+                        <p class="text-secondary leading-relaxed">@Model.MoTa</p>
+
+                        <hr class="my-4">
+
+                        <!-- Thành phần hồ sơ -->
+                        <div class="mb-4">
+                            <h5 class="fw-bold text-primary mb-3">
+                                <i class="fa fa-folder-open me-2"></i>Thành phần hồ sơ yêu cầu
+                            </h5>
+                            <div class="p-3 rounded bg-light border">
+                                @if (!string.IsNullOrEmpty(Model.ThanhPhanHoSo))
+                                {
+                                    <div style="white-space: pre-line;">@Model.ThanhPhanHoSo</div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Sinh viên điền biểu mẫu trực tuyến và đính kèm bản chụp giấy
+                                        tờ liên quan (nếu có).</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Trình tự giải quyết -->
+                            <div class="mb-4">
+                                <h5 class="fw-bold text-primary mb-3">
+                                    <i class="fa fa-list-ol me-2"></i>Quy trình thực hiện
+                                </h5>
+                                <ol class="list-group list-group-numbered border-0">
+                                    <li class="list-group-item border-0 ps-0"><b>Bước 1:</b> Sinh viên đăng nhập vào hệ thống, kiểm
+                                        tra thông tin và nhấn "Nộp hồ sơ trực tuyến".</li>
+                                        <li class="list-group-item border-0 ps-0"><b>Bước 2:</b> Cán bộ bộ phận một cửa tiếp nhận, thẩm
+                                            định hồ sơ trong giờ làm việc.</li>
+                                            <li class="list-group-item border-0 ps-0"><b>Bước 3:</b> Chuyển lãnh đạo phòng ban ký duyệt và
+                                                đóng dấu xác nhận.</li>
+                                                <li class="list-group-item border-0 ps-0"><b>Bước 4:</b> Trả kết quả (file ký số trực tuyến hoặc
+                                                    nhận trực tiếp tại văn phòng một cửa).</li>
+                                                </ol>
+                                            </div>
+
+                                            <!-- Gợi ý câu hỏi NLP -->
+                                            @if (cauHoiNLP.Any())
+                                            {
+                                                <div class="mb-3">
+                                                    <h6 class="fw-bold text-muted small text-uppercase mb-2">
+                                                        <i class="fa fa-robot text-info me-1"></i>Câu hỏi sinh viên thường hỏi về thủ tục này:
+                                                    </h6>
+                                                    <div class="d-flex flex-wrap gap-2">
+                                                        @foreach (var ch in cauHoiNLP)
+                                                        {
+                                                            <span class="badge bg-light text-secondary border p-2 small">@ch.CauHoiMau</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <!-- Cột phải: Khối tóm tắt thông tin & Nút nộp -->
+                                    <div class="col-lg-4">
+                                        <div class="card border-0 shadow-sm p-4 bg-white sticky-top" style="top: 80px;">
+                                            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Thông tin tiếp nhận</h5>
+                
+                                            <div class="mb-3">
+                                                <small class="text-muted d-block">Đơn vị xử lý</small>
+                                                <strong class="text-dark">@Model.DonViXuLy</strong>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <small class="text-muted d-block">Thời hạn giải quyết</small>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                    <i class="fa fa-clock me-1"></i>@(Model.ThoiGianXuLyNgay ?? 2) ngày làm việc
+                                                </span>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <small class="text-muted d-block">Lệ phí dịch vụ</small>
+                                                <span class="fs-5 fw-bold text-danger">
+                                                    @(Model.LePhi == null || Model.LePhi == 0 ? "Miễn phí" : Model.LePhi.Value.ToString("N0") + " VNĐ")
+                                                </span>
+                                            </div>
+
+                                            <div class="mb-4">
+                                                <small class="text-muted d-block">Hình thức thực hiện</small>
+                                                <span class="badge bg-info-subtle text-info-emphasis border">Trực tuyến toàn trình</span>
+                                            </div>
+
+                                            <div class="d-grid gap-2">
+                                                <a asp-controller="HoSo" asp-action="NopHoSo" asp-route-maDichVu="@Model.MaDichVu"
+                                                   class="btn btn-primary py-2 fw-bold text-uppercase shadow-sm"
+                                                   style="background-color: #005691;">
+                                                    <i class="fa fa-paper-plane me-2"></i>Nộp hồ sơ trực tuyến
+                                                </a>
+                                                <a href="/#thu-tuc-hanh-chinh" class="btn btn-outline-secondary">
+                                                    <i class="fa fa-arrow-left me-1"></i>Quay lại danh mục
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>

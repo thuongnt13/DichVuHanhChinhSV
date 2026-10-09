@@ -1,0 +1,206 @@
+@model List<CongDichVuSinhVien.Models.DichVu>
+@{
+    Layout = "_LayoutNiceAdmin";
+    ViewData["Title"] = "Quản lý thủ tục hành chính";
+    var linhVucs = ViewBag.LinhVucs as List<CongDichVuSinhVien.Models.LinhVuc> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1" style="color: #012970;">DANH MỤC THỦ TỤC HÀNH CHÍNH</h4>
+        <small class="text-muted">Quản lý các dịch vụ hành chính tiếp nhận trực tuyến</small>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+        <i class="bi bi-plus-circle me-1"></i>Thêm thủ tục mới
+    </button>
+</div>
+
+<div class="card card-nice p-0 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small">
+                <tr>
+                    <th class="ps-3">KÝ HIỆU</th>
+                    <th>TÊN THỦ TỤC</th>
+                    <th>LĨNH VỰC</th>
+                    <th>ĐƠN VỊ THỤ LÝ</th>
+                    <th>THỜI HẠN</th>
+                    <th>LỆ PHÍ</th>
+                    <th class="text-center">TRẠNG THÁI</th>
+                    <th class="text-end pe-3">THAO TÁC</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr id="row_@item.MaDichVu">
+                        <td class="ps-3 fw-bold text-primary font-monospace">@item.KyHieuDichVu</td>
+                        <td class="fw-semibold">@item.TenDichVu</td>
+                        <td><span class="badge bg-light text-dark border">@item.MaLinhVucNavigation?.TenLinhVuc</span></td>
+                        <td class="small">@item.DonViXuLy</td>
+                        <td class="small">@(item.ThoiGianXuLyNgay ?? 2) ngày</td>
+                        <td class="small fw-bold text-danger">@(item.LePhi == null || item.LePhi == 0 ? "Miễn phí" :
+                                                                                item.LePhi.Value.ToString("N0") + "đ")</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm border-0 p-0" onclick="toggleActive(@item.MaDichVu)">
+                                    <span
+                                        class="badge @(item.KichHoat == true ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary")"
+                                        id="badge_@item.MaDichVu">
+                                        @(item.KichHoat == true ? "Đang mở" : "Tạm đóng")
+                                    </span>
+                                </button>
+                            </td>
+                            <td class="text-end pe-3">
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(@item.MaDichVu)"
+                                        title="Sửa"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteItem(@item.MaDichVu)"
+                                        title="Xóa"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PHÂN TRANG -->
+        @if (ViewBag.TongSoTrang > 1)
+        {
+            <div class="d-flex justify-content-end p-3 border-top">
+                <ul class="pagination pagination-sm mb-0">
+                    @for (int i = 1; i <= ViewBag.TongSoTrang; i++)
+                    {
+                        <li class="page-item @(i == ViewBag.TrangHienTai ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { trang = i, tuKhoa = ViewBag.TuKhoa })">@i</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+
+    <!-- MODAL AJAX THÊM / SỬA -->
+    <div class="modal fade" id="modalThuTuc" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h6 class="modal-title fw-bold" id="modalTitle">THỦ TỤC HÀNH CHÍNH</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body row g-3">
+                    <input type="hidden" id="txtMaDichVu" value="0" />
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Ký hiệu mã *</label>
+                        <input type="text" id="txtKyHieu" class="form-control" placeholder="VD: DV_BANGDIEM" />
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label small fw-bold">Tên thủ tục *</label>
+                        <input type="text" id="txtTenDichVu" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Lĩnh vực</label>
+                        <select id="slLinhVuc" class="form-select">
+                            @foreach (var lv in linhVucs)
+                            {
+                                <option value="@lv.MaLinhVuc">@lv.TenLinhVuc</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Đơn vị thụ lý</label>
+                        <input type="text" id="txtDonVi" class="form-control" value="Phòng Quản lý Đào tạo" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Thời hạn (ngày)</label>
+                        <input type="number" id="txtThoiHan" class="form-control" value="2" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Lệ phí (VNĐ)</label>
+                        <input type="number" id="txtLePhi" class="form-control" value="0" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Mô tả tóm tắt</label>
+                        <textarea id="txtMoTa" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary btn-sm fw-bold" onclick="saveData()">Lưu dữ liệu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+            const modalEl = new bootstrap.Modal(document.getElementById('modalThuTuc'));
+
+            function openAddModal() {
+                document.getElementById('modalTitle').innerText = "THÊM MỚI THỦ TỤC HÀNH CHÍNH";
+                document.getElementById('txtMaDichVu').value = 0;
+                document.getElementById('txtKyHieu').value = "";
+                document.getElementById('txtTenDichVu').value = "";
+                document.getElementById('txtMoTa').value = "";
+                modalEl.show();
+            }
+
+            async function openEditModal(id) {
+                const res = await fetch(`/Admin/QuanLyThuTuc/GetJson/${id}`);
+                const data = await res.json();
+                document.getElementById('modalTitle').innerText = "CHỈNH SỬA THỦ TỤC";
+                document.getElementById('txtMaDichVu').value = data.maDichVu;
+                document.getElementById('txtKyHieu').value = data.kyHieuDichVu;
+                document.getElementById('txtTenDichVu').value = data.tenDichVu;
+                document.getElementById('slLinhVuc').value = data.maLinhVuc;
+                document.getElementById('txtDonVi').value = data.donViXuLy;
+                document.getElementById('txtThoiHan').value = data.thoiGianXuLyNgay;
+                document.getElementById('txtLePhi').value = data.lePhi;
+                document.getElementById('txtMoTa').value = data.moTa || "";
+                modalEl.show();
+            }
+
+            async function saveData() {
+                const payload = {
+                    maDichVu: parseInt(document.getElementById('txtMaDichVu').value),
+                    kyHieuDichVu: document.getElementById('txtKyHieu').value,
+                    tenDichVu: document.getElementById('txtTenDichVu').value,
+                    maLinhVuc: parseInt(document.getElementById('slLinhVuc').value),
+                    donViXuLy: document.getElementById('txtDonVi').value,
+                    thoiGianXuLyNgay: parseInt(document.getElementById('txtThoiHan').value),
+                    lePhi: parseFloat(document.getElementById('txtLePhi').value),
+                    moTa: document.getElementById('txtMoTa').value
+                };
+
+                const res = await fetch('/Admin/QuanLyThuTuc/SaveAjax', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    Swal.fire('Thành công', result.message, 'success').then(() => location.reload());
+                }
+            }
+
+            async function deleteItem(id) {
+                const confirm = await Swal.fire({ title: 'Xác nhận xóa?', text: 'Dữ liệu sẽ bị xóa vĩnh viễn!', icon: 'warning', showCancelButton: true });
+                if (confirm.isConfirmed) {
+                    const res = await fetch(`/Admin/QuanLyThuTuc/DeleteAjax/${id}`, { method: 'POST' });
+                    const result = await res.json();
+                    if (result.success) {
+                        document.getElementById(`row_${id}`).remove();
+                        Swal.fire('Đã xóa', result.message, 'success');
+                    }
+                }
+            }
+
+            async function toggleActive(id) {
+                const res = await fetch(`/Admin/QuanLyThuTuc/ToggleActiveAjax/${id}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    const badge = document.getElementById(`badge_${id}`);
+                    badge.className = data.active ? 'badge bg-success-subtle text-success' : 'badge bg-secondary-subtle text-secondary';
+                    badge.innerText = data.active ? 'Đang mở' : 'Tạm đóng';
+                }
+            }
+        </script>
+    }

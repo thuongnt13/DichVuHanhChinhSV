@@ -1,0 +1,159 @@
+@model CongDichVuSinhVien.Components.DanhSachThuTucViewModel
+@{
+    var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+}
+
+<section id="thu-tuc-hanh-chinh" class="py-4">
+    <div class="container">
+        <!-- Thông báo phân tích NLP nếu đang tìm kiếm -->
+        @if (Model.IsNlpSearch)
+        {
+            <div class="alert alert-light border-start border-4 border-primary shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <span class="badge bg-primary me-2"><i class="fa fa-brain me-1"></i>Trợ lý NLP</span>
+                        <strong>Ý định phân tích cho:</strong> <em>"@Model.TuKhoa"</em>
+                    </div>
+                    <a href="@Url.Action("Index", "Home")#thu-tuc-hanh-chinh" class="btn btn-sm btn-outline-secondary">Xem
+                        tất cả thủ tục</a>
+                    </div>
+                </div>
+            }
+
+            <!-- Tiêu đề & Bộ lọc lĩnh vực -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark">
+                        @(Model.IsNlpSearch ? "Thủ tục phù hợp nhất với nhu cầu" : "Danh mục thủ tục hành chính")
+                    </h4>
+                    <small class="text-muted">
+                        Hiển thị <b>@Model.DanhSachDichVu.Count</b> / tổng số <b>@Model.TongSoBanGhi</b> thủ tục
+                    </small>
+                </div>
+
+                @if (!Model.IsNlpSearch)
+                {
+                    <div class="d-flex flex-wrap gap-1">
+                        <a href="@Url.Action("Index", "Home", new { maLinhVuc = (int?)null, trang = 1 })#thu-tuc-hanh-chinh"
+                           class="btn btn-sm @(Model.MaLinhVucHienTai == null ? "btn-primary" : "btn-outline-primary")">
+                            Tất cả
+                        </a>
+                        @foreach (var lv in Model.LinhVucs)
+                        {
+                            <a href="@Url.Action("Index", "Home", new { maLinhVuc = lv.MaLinhVuc, trang = 1 })#thu-tuc-hanh-chinh"
+                               class="btn btn-sm @(Model.MaLinhVucHienTai == lv.MaLinhVuc ? "btn-primary" : "btn-outline-secondary")">
+                                @lv.TenLinhVuc
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+
+            @if (!Model.DanhSachDichVu.Any())
+            {
+                <div class="alert alert-warning text-center py-4 rounded-3">
+                    <i class="fa fa-info-circle fs-3 d-block mb-2 text-warning"></i>
+                    Không tìm thấy thủ tục nào. Hãy thử chọn lĩnh vực khác hoặc diễn đạt lại câu hỏi!
+                </div>
+            }
+            else
+            {
+                <!-- GRID 6 THỦ TỤC (3 CỘT x 2 HÀNG) -->
+                <div class="row g-4 mb-4">
+                    @foreach (var item in Model.DanhSachDichVu)
+                    {
+                        var nlpInfo = Model.KetQuaNlp.FirstOrDefault(k => k.DichVu.MaDichVu == item.MaDichVu);
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm border p-3 justify-content-between">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-light text-primary border border-primary">@item.KyHieuDichVu</span>
+                                        @if (nlpInfo != null)
+                                        {
+                                            <span class="badge bg-info text-dark">
+                                                <i class="fa fa-bullseye me-1"></i>Độ khớp: @nlpInfo.DiemTuongDong%
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted"><i class="fa fa-clock me-1"></i>@(item.ThoiGianXuLyNgay ?? 2)
+                                                ngày</small>
+                                            }
+                                        </div>
+
+                                        <h6 class="fw-bold text-dark mb-2" style="min-height: 40px;">@item.TenDichVu</h6>
+
+                                        @if (nlpInfo != null)
+                                        {
+                                            <div class="small p-2 bg-light rounded text-muted mb-2 border-start border-3 border-info">
+                                                <em>@nlpInfo.LyDoGoiY</em>
+                                            </div>
+                                        }
+
+                                        <p class="text-secondary small mb-3 text-truncate-2" style="min-height: 38px;">
+                                            @(string.IsNullOrEmpty(item.MoTa) ? "Thủ tục tiếp nhận trực tuyến cho sinh viên." :
+                                    item.MoTa)
+                                        </p>
+                                
+                                        <div class="small text-muted mb-3">
+                                            <div><strong>Đơn vị:</strong> @item.DonViXuLy</div>
+                                            <div><strong>Lệ phí:</strong> @(item.LePhi == null || item.LePhi == 0 ? "Miễn phí" :
+                                                                                                                                item.LePhi.Value.ToString("N0") + " VNĐ")</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex gap-2 border-top pt-2">
+                                            <!-- Nút Chi tiết luôn dẫn đúng trang chi tiết thủ tục -->
+                                            <a asp-controller="ThuTuc" asp-action="ChiTiet" asp-route-id="@item.MaDichVu"
+                                               class="btn btn-sm btn-outline-secondary flex-grow-1">
+                                                Chi tiết
+                                            </a>
+    
+                                            <!-- Nút Nộp hồ sơ: Luôn dẫn thẳng vào form nộp, HoSoController sẽ tự kiểm tra quyền -->
+                                            <a asp-controller="HoSo" asp-action="NopHoSo" asp-route-maDichVu="@item.MaDichVu"
+                                               class="btn btn-sm btn-primary flex-grow-1" style="background-color: #005691;">
+                                                Nộp hồ sơ
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- THANH PHÂN TRANG (PAGINATION) -->
+                        @if (Model.TongSoTrang > 1)
+                        {
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination justify-content-center mb-0">
+                                    <!-- Nút trang trước -->
+                                    <li class="page-item @(!Model.CoTrangTruoc ? "disabled" : "")">
+                                        <a class="page-link"
+                                           href="@Url.Action("Index", "Home", new { tuKhoa = Model.TuKhoa, maLinhVuc = Model.MaLinhVucHienTai, trang = Model.TrangHienTai - 1 })#thu-tuc-hanh-chinh">
+                                            <i class="fa fa-chevron-left small"></i> Trước
+                                        </a>
+                                    </li>
+
+                                    <!-- Danh sách các số trang -->
+                                    @for (int i = 1; i <= Model.TongSoTrang; i++)
+                                    {
+                                        <li class="page-item @(i == Model.TrangHienTai ? "active" : "")">
+                                            <a class="page-link"
+                                               href="@Url.Action("Index", "Home", new { tuKhoa = Model.TuKhoa, maLinhVuc = Model.MaLinhVucHienTai, trang = i })#thu-tuc-hanh-chinh">
+                                                @i
+                                            </a>
+                                        </li>
+                                    }
+
+                                    <!-- Nút trang sau -->
+                                    <li class="page-item @(!Model.CoTrangSau ? "disabled" : "")">
+                                        <a class="page-link"
+                                           href="@Url.Action("Index", "Home", new { tuKhoa = Model.TuKhoa, maLinhVuc = Model.MaLinhVucHienTai, trang = Model.TrangHienTai + 1 })#thu-tuc-hanh-chinh">
+                                            Sau <i class="fa fa-chevron-right small"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        }
+                    }
+                </div>
+            </section>

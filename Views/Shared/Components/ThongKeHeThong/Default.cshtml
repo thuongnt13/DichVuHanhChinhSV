@@ -1,0 +1,67 @@
+@model CongDichVuSinhVien.Components.ThongKeViewModel
+
+<style>
+    .stat-box-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-box-link:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
+    }
+</style>
+
+<section id="thong-ke" class="py-4">
+    <div class="container">
+        <div class="row g-3 text-center">
+            <!-- Ô 1: Dịch vụ công khai -->
+            <div class="col-md-3">
+                <div class="p-3 bg-white border rounded shadow-sm border-start border-4 border-primary h-100">
+                    <div class="text-muted small fw-bold text-uppercase">DỊCH VỤ CÔNG KHAI</div>
+                    <div class="fs-2 fw-bold text-primary mt-1">@Model.TongDichVu</div>
+                    <small class="text-muted">Áp dụng trực tuyến</small>
+                </div>
+            </div>
+
+            <!-- Ô 2: Lĩnh vực quản lý -->
+            <div class="col-md-3">
+                <div class="p-3 bg-white border rounded shadow-sm border-start border-4 border-success h-100">
+                    <div class="text-muted small fw-bold text-uppercase">LĨNH VỰC QUẢN LÝ</div>
+                    <div class="fs-2 fw-bold text-success mt-1">@Model.TongLinhVuc</div>
+                    <small class="text-muted">Phòng ban phụ trách</small>
+                </div>
+            </div>
+
+            <!-- Ô 3: Hồ sơ tiếp nhận (BẤM VÀO ĐỂ XEM DANH SÁCH) -->
+            <div class="col-md-3">
+                <a asp-controller="HoSo" asp-action="DanhSach" asp-route-loai="tatca"
+                   class="stat-box-link p-3 bg-white border rounded shadow-sm border-start border-4 border-info h-100"
+                   title="Bấm để xem danh sách hồ sơ">
+                    <div class="text-muted small fw-bold text-uppercase">
+                        @(Model.IsSinhVien ? "HỒ SƠ CỦA TÔI" : "HỒ SƠ TIẾP NHẬN")
+                    </div>
+                    <div class="fs-2 fw-bold text-info mt-1">@Model.TongHoSoNop</div>
+                    <small class="text-primary"><i class="fa fa-list-ul me-1"></i>Xem danh sách <i
+                        class="fa fa-arrow-right small"></i></small>
+                    </a>
+                </div>
+
+                <!-- Ô 4: Hồ sơ hoàn thành (BẤM VÀO ĐỂ XEM HỒ SƠ ĐÃ XONG) -->
+                <div class="col-md-3">
+                    <a asp-controller="HoSo" asp-action="DanhSach" asp-route-loai="hoanthanh"
+                       class="stat-box-link p-3 bg-white border rounded shadow-sm border-start border-4 border-warning h-100"
+                       title="Bấm để xem danh sách hồ sơ hoàn thành">
+                        <div class="text-muted small fw-bold text-uppercase">
+                            @(Model.IsSinhVien ? "HỒ SƠ ĐÃ DUYỆT" : "HỒ SƠ HOÀN THÀNH")
+                        </div>
+                        <div class="fs-2 fw-bold text-warning mt-1">@Model.TongHoSoXong</div>
+                        <small class="text-primary"><i class="fa fa-check-circle me-1"></i>Xem kết quả <i
+                            class="fa fa-arrow-right small"></i></small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>

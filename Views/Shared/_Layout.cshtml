@@ -1,0 +1,336 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CỔNG DỊCH VỤ HÀNH CHÍNH CHO SINH VIÊN</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+            :root {
+                --blue-navy: #002b5b;
+                /* Xanh nước biển đậm */
+                --blue-primary: #005691;
+                /* Xanh biển trung tính */
+                --blue-accent: #0284c7;
+                /* Xanh biển nhạt nổi bật */
+                --blue-soft: #e0f2fe;
+                /* Nền xanh biển nhạt */
+                --bg-light: #f4f8fb;
+            }
+
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: var(--bg-light);
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+                color: #1e293b;
+            }
+
+            .main-wrapper {
+                flex: 1;
+            }
+
+            /* 1. Top bar */
+            .top-bar {
+                background-color: var(--blue-navy);
+                color: #cbd5e1;
+                padding: 7px 0;
+                font-size: 0.82rem;
+                border-bottom: 2px solid var(--blue-accent);
+            }
+
+            /* 2. Brand bar */
+            .brand-header {
+                background: #ffffff;
+                padding: 14px 0;
+                border-bottom: 1px solid #e2e8f0;
+                position: relative;
+                z-index: 1030;
+            }
+
+            .portal-title {
+                font-size: 1.35rem;
+                font-weight: 800;
+                color: var(--blue-navy);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 0;
+            }
+
+            .portal-subtitle {
+                font-size: 0.75rem;
+                color: #64748b;
+                text-transform: uppercase;
+                font-weight: 600;
+            }
+
+            /* 3. Main Navigation Menu */
+            .main-nav-bar {
+                background-color: var(--blue-primary);
+                box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+            }
+
+            .navbar-main {
+                padding: 0;
+            }
+
+            .navbar-main .nav-link {
+                color: #ffffff !important;
+                font-weight: 600;
+                font-size: 0.92rem;
+                padding: 12px 16px !important;
+                border-right: 1px solid rgba(255, 255, 255, 0.15);
+                transition: all 0.2s ease-in-out;
+            }
+
+            .navbar-main .nav-link:hover,
+            .navbar-main .nav-link.active {
+                background-color: var(--blue-navy);
+                color: #ffffff !important;
+            }
+
+            .navbar-main .nav-item:first-child .nav-link {
+                border-left: 1px solid rgba(255, 255, 255, 0.15);
+            }
+
+            /* Footer */
+            .footer-gov {
+                background-color: var(--blue-navy);
+                color: #cbd5e1;
+                padding: 40px 0 20px;
+                margin-top: 40px;
+                border-top: 4px solid var(--blue-accent);
+                font-size: 0.9rem;
+            }
+
+            .footer-gov a {
+                color: #7dd3fc;
+                text-decoration: none;
+            }
+
+            .footer-gov a:hover {
+                text-decoration: underline;
+            }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body>
+
+    <!-- TOPBAR -->
+    <div class="top-bar">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div>
+                <b>HỆ THỐNG MỘT CỬA ĐIỆN TỬ SINH VIÊN</b> | TRƯỜNG ĐẠI HỌC
+            </div>
+            <div class="d-none d-md-flex align-items-center gap-3">
+                <span><i class="fa fa-robot text-info me-1"></i>Trợ lý NLP hỗ trợ</span>
+                <span><i class="fa fa-phone-alt me-1"></i>Hotline: (024) 3754 7777</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- BRAND HEADER & PROFILE -->
+    <header class="brand-header">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <img src="/uploads/hoso/image.png" alt="Cổng dịch vụ sinh viên" class="fs-1 me-3"
+                     style="width: 55px; height: 55px; object-fit: contain;">
+                <div>
+                    <h1 class="portal-title">DỊCH VỤ HÀNH CHÍNH CHO SINH VIÊN</h1>
+                    <div class="portal-subtitle">Cổng Tiếp nhận &amp; Giải quyết thủ tục hành chính trực tuyến</div>
+                </div>
+            </div>
+
+            <!-- TÀI KHOẢN NGƯỜI DÙNG -->
+            <div>
+                <!-- KHU VỰC TÀI KHOẢN NGƯỜI DÙNG ĐÃ CHUẨN HÓA VAI TRÒ -->
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    // 1. Lấy vai trò và chuẩn hóa (hỗ trợ cả CAN_BO/CanBo, ADMIN/QuanTri)
+                    var roleClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+                    bool isAdmin = User.IsInRole("ADMIN") || User.IsInRole("QuanTri") || roleClaim.Equals("ADMIN",
+                                StringComparison.OrdinalIgnoreCase);
+                    bool isCanBo = User.IsInRole("CAN_BO") || User.IsInRole("CanBo") || roleClaim.Equals("CAN_BO",
+                                StringComparison.OrdinalIgnoreCase);
+                    bool isSinhVien = !isAdmin && !isCanBo;
+
+                    // 2. Thiết lập tên hiển thị và màu sắc huy hiệu chuẩn
+                    string roleDisplayName = isAdmin ? "Quản trị viên" : (isCanBo ? "Cán bộ một cửa" : "Sinh viên");
+                    string badgeClass = isAdmin ? "bg-danger" : (isCanBo ? "bg-warning text-dark" : "bg-primary");
+
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle fw-semibold" type="button"
+                                data-bs-toggle="dropdown">
+                            <i class="fa fa-user-circle me-1"></i> @User.Identity.Name
+                            <span class="badge @badgeClass ms-1">@roleDisplayName</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                            <li>
+                                <div class="dropdown-item-text text-muted small">
+                                    Mã định danh: <b>@User.FindFirst("MaDinhDanh")?.Value</b>
+                                </div>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            @* MENU CHO SINH VIÊN *@
+                            @if (isSinhVien)
+                            {
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="HoSo" asp-action="DanhSach">
+                                        Hồ sơ đã nộp
+                                    </a>
+                                </li>
+                            }
+
+                            @* MENU CHO CÁN BỘ VÀ ADMIN (CHUYỂN VÀO AREA ADMIN) *@
+                            @if (isCanBo || isAdmin)
+                            {
+                                <li>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="QuanLyHoSo" asp-action="Index">
+                                        <i class="fa fa-tasks me-2 text-warning"></i>Quản lý xét duyệt hồ sơ
+                                    </a>
+                                </li>
+                            }
+
+                            @* MENU RIÊNG CHO QUẢN TRỊ VIÊN *@
+                            @if (isAdmin)
+                            {
+                                <li>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                                        <i class="fa fa-chart-line me-2 text-danger"></i>Trang quản trị Dashboard
+                                    </a>
+                                </li>
+                            }
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" asp-area="" asp-controller="TaiKhoan"
+                                   asp-action="DangXuat">
+                                    <i class="fa fa-sign-out-alt me-2"></i>Đăng xuất
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <a class="btn btn-primary px-3 fw-semibold" asp-area="" asp-controller="TaiKhoan" asp-action="DangNhap">
+                        <i class="fa fa-sign-in-alt me-1"></i> Đăng nhập
+                    </a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <!-- MENU ĐIỀU HƯỚNG CHÍNH (THEO ĐÚNG ẢNH MẪU - KHÔNG ICON PHÍA TRƯỚC CHỮ) -->
+    <nav class="main-nav-bar sticky-top">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-main">
+                <button class="navbar-toggler text-white my-2 ms-auto" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navContent">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <!-- Icon trang chủ -->
+                        <li class="nav-item">
+                            <a class="nav-link text-center px-3" asp-controller="Home" asp-action="Index"
+                               title="Trang chủ">
+                                <i class="fa fa-home fs-5"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#gioi-thieu">Giới thiệu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#thu-tuc-hanh-chinh">Thủ tục hành chính</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#nop-ho-so">Nộp hồ sơ trực tuyến</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#tra-cuu">Tra cứu hồ sơ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#phan-anh">Phản ánh - Kiến nghị</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#danh-gia">Đánh giá</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#thong-ke">Thống kê</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="dropHoTro" role="button"
+                               data-bs-toggle="dropdown">
+                                Hỗ trợ
+                            </a>
+                            <ul class="dropdown-menu shadow border-0 mt-1">
+                                <li><a class="dropdown-item" href="#huong-dan">Hướng dẫn nộp hồ sơ</a></li>
+                                <li><a class="dropdown-item" href="#tro-ly-nlp">Trợ lý ảo NLP</a></li>
+                                <li><a class="dropdown-item" href="#lien-he">Thông tin liên hệ các phòng ban</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </nav>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <main class="main-wrapper">
+        @RenderBody()
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer-gov">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-5">
+                    <h6 class="fw-bold text-white text-uppercase mb-3"><img src="/uploads/hoso/image.png"
+                                                                                alt="Cổng dịch vụ sinh viên" class="fs-1 me-3"
+                                                                                style="width: 45px; height: 45px; object-fit: contain;">Cổng Dịch Vụ Hành chính cho Sinh
+                        Viên</h6>
+                        <p class="small text-light mb-2">Hệ thống tiếp nhận và giải quyết thủ tục sinh viên một cửa, ứng
+                            dụng công nghệ Xử lý Ngôn ngữ Tự nhiên (NLP) hỗ trợ tự động hóa giải đáp và tra cứu dịch vụ
+                            công.</p>
+                            <p class="small text-muted mb-0">Phiên bản trực tuyến 2026. Bản quyền thuộc Bộ phận Một cửa Sinh
+                                viên.</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="fw-bold text-white text-uppercase mb-3">Đơn vị chuyên trách</h6>
+                                <ul class="list-unstyled small mb-0">
+                                    <li class="mb-2">Phòng Đào tạo</li>
+                                    <li class="mb-2">Phòng Công tác Sinh viên</li>
+                                    <li class="mb-2">Phòng Khảo thí &amp; ĐBCL</li>
+                                    <li class="mb-2">Phòng Kế hoạch Tài chính</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <h6 class="fw-bold text-white text-uppercase mb-3">Bộ phận một cửa</h6>
+                                <p class="small text-light mb-1">Địa điểm: Tầng 1, Tòa nhà Điều hành</p>
+                                <p class="small text-light mb-1">Email: motcua@sinhvien.edu.vn</p>
+                                <p class="small text-light mb-0">Giờ làm việc: 08:00 - 17:00 (Thứ 2 đến Thứ 6)</p>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+
+                <!-- Bootstrap 5 JS -->
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                @await RenderSectionAsync("Scripts", required: false)
+            </body>
+
+        </html>

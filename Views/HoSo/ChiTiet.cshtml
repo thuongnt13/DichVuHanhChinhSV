@@ -1,0 +1,267 @@
+@model CongDichVuSinhVien.Models.HoSoDichVu
+@{
+    ViewData["Title"] = "Chi tiết hồ sơ: " + Model.MaTraCuu;
+
+    // Phân loại hình thức nhận kết quả bản cứng
+    bool isBuuDien = Model.LyDoXin?.Contains("CHUYỂN PHÁT NHANH") == true;
+
+    // Thiết lập màu sắc trạng thái đồng bộ
+    string badgeClass = Model.TrangThai switch
+    {
+        "Chờ tiếp nhận" => "bg-warning text-dark",
+        "Đang xử lý" => "bg-info text-dark",
+        "Hoàn thành" or "Đã duyệt" => "bg-success text-white",
+        "Từ chối" => "bg-danger text-white",
+        _ => "bg-secondary text-white"
+    };
+
+    string iconStatus = Model.TrangThai switch
+    {
+        "Chờ tiếp nhận" => "fa-hourglass-half",
+        "Đang xử lý" => "fa-sync-alt fa-spin",
+        "Hoàn thành" or "Đã duyệt" => "fa-check-circle",
+        "Từ chối" => "fa-times-circle",
+        _ => "fa-info-circle"
+    };
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb điều hướng -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" class="text-decoration-none">Trang
+                chủ</a></li>
+                <li class="breadcrumb-item"><a asp-action="DanhSach" class="text-decoration-none">Hồ sơ của tôi</a></li>
+                <li class="breadcrumb-item active text-primary fw-semibold">@Model.MaTraCuu</li>
+            </ol>
+        </nav>
+
+        <div class="row g-4">
+            <!-- ================= CỘT TRÁI: THÔNG TIN HỒ SƠ & KẾT QUẢ ================= -->
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm p-4 bg-white mb-4 rounded-3">
+                    <!-- Tiêu đề & Trạng thái -->
+                    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3 flex-wrap gap-2">
+                        <div>
+                            <span class="text-muted small text-uppercase fw-semibold d-block">Mã số hồ sơ tiếp nhận</span>
+                            <h4 class="fw-bold text-primary font-monospace mb-0">@Model.MaTraCuu</h4>
+                        </div>
+                        <div>
+                            <span class="badge @badgeClass fs-6 px-3 py-2 shadow-sm">
+                                <i class="fa @iconStatus me-1"></i> @Model.TrangThai
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 1. THỦ TỤC ĐỀ NGHỊ -->
+                    <div class="p-3 bg-light rounded-3 border mb-3">
+                        <div class="small text-muted text-uppercase fw-bold mb-1">Thủ tục đề nghị giải quyết</div>
+                        <h5 class="fw-bold text-dark mb-1">@Model.MaDichVuNavigation?.TenDichVu</h5>
+                        <div class="small text-muted">
+                            Mã hiệu: <span
+                            class="badge bg-secondary-subtle text-dark border">@Model.MaDichVuNavigation?.KyHieuDichVu</span>
+                            |
+                            Đơn vị thụ lý: <strong>@Model.MaDichVuNavigation?.DonViXuLy</strong>
+                        </div>
+                    </div>
+
+                    <!-- 2. THÔNG TIN SINH VIÊN -->
+                    <h6 class="fw-bold text-dark mb-2">
+                        <i class="fa fa-user-graduate text-primary me-2"></i>Thông tin người đề nghị
+                    </h6>
+                    <div class="row g-2 small p-3 border rounded-3 bg-white mb-3">
+                        <div class="col-sm-6"><strong>Họ và tên:</strong>
+                            @Model.MaSinhVienNavigation?.MaNguoiDungNavigation?.HoTen</div>
+                            <div class="col-sm-6"><strong>Mã sinh viên (MSSV):</strong> <span
+                                class="fw-bold text-primary">@Model.MaSinhVien</span></div>
+                                <div class="col-sm-6"><strong>Lớp học:</strong> @Model.MaSinhVienNavigation?.LopHoc</div>
+                                <div class="col-sm-6"><strong>Khoa / Viện:</strong> @Model.MaSinhVienNavigation?.KhoaVien</div>
+                                <div class="col-sm-6"><strong>Email:</strong>
+                                    @Model.MaSinhVienNavigation?.MaNguoiDungNavigation?.Email</div>
+                                    <div class="col-sm-6"><strong>Số điện thoại:</strong>
+                                        @(Model.MaSinhVienNavigation?.MaNguoiDungNavigation?.SoDienThoai ?? "Chưa cập nhật")</div>
+                                    </div>
+
+                                    <!-- 3. HÌNH THỨC NHẬN KẾT QUẢ BẢN CỨNG -->
+                                    <h6 class="fw-bold text-dark mb-2">
+                                        <i class="fa fa-shipping-fast text-primary me-2"></i>Hình thức nhận kết quả (Bản giấy có dấu đỏ)
+                                    </h6>
+                                    <div
+                                        class="p-3 border rounded-3 mb-3 @(isBuuDien ? "bg-success-subtle border-success" : "bg-primary-subtle border-primary")">
+                                        @if (isBuuDien)
+                                        {
+                                            <div class="d-flex align-items-center text-success fw-bold mb-1">
+                                                <i class="fa fa-truck me-2 fs-5"></i> Gửi chuyển phát nhanh qua Bưu điện (EMS)
+                                            </div>
+                                            <small class="text-dark d-block">
+                                                Hồ sơ giấy có dấu đỏ sẽ được niêm phong gửi về địa chỉ theo yêu cầu. Sinh viên thanh toán cước
+                                                chuyển phát khi nhận thư.
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <div class="d-flex align-items-center text-primary fw-bold mb-1">
+                                                <i class="fa fa-building me-2 fs-5"></i> Nhận trực tiếp tại bộ phận Một cửa
+                                            </div>
+                                            <small class="text-dark d-block">
+                                                Sinh viên mang theo Thẻ sinh viên đến trực tiếp văn phòng Một cửa để nhận bản giấy có dấu đỏ
+                                                tươi.
+                                            </small>
+                                        }
+                                    </div>
+
+                                    <!-- 4. NỘI DUNG ĐỀ NGHỊ & THÔNG TIN ĐỊA CHỈ -->
+                                    <h6 class="fw-bold text-dark mb-2">
+                                        <i class="fa fa-file-alt text-primary me-2"></i>Nội dung đơn &amp; Địa chỉ giao nhận
+                                    </h6>
+                                    <div class="p-3 bg-light rounded-3 border mb-3 text-secondary small"
+                                         style="white-space: pre-line; line-height: 1.6;">
+                                        @Model.LyDoXin
+                                    </div>
+
+                                    <!-- 5. TỆP MINH CHỨNG ĐÍNH KÈM -->
+                                    <div class="mb-3">
+                                        <strong class="small text-dark me-2"><i class="fa fa-paperclip me-1"></i>Tệp minh chứng đính
+                                            kèm:</strong>
+                                            @if (!string.IsNullOrEmpty(Model.TepDinhKem))
+                                            {
+                                                <a href="@Model.TepDinhKem" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fa fa-download me-1"></i> Tải về tệp minh chứng
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="small text-muted fst-italic">Không có tệp đính kèm.</span>
+                                            }
+                                        </div>
+
+                                        <!-- 6. KẾT QUẢ GIẢI QUYẾT BẢN GIẤY (KHI HOÀN THÀNH HOẶC TỪ CHỐI) -->
+                                        @if (Model.TrangThai == "Hoàn thành" || Model.TrangThai == "Đã duyệt")
+                                        {
+                                            <div class="alert @(isBuuDien ? "alert-success" : "alert-primary") border shadow-sm mt-3 mb-0">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fa fa-check-circle fs-4 me-2 @(isBuuDien ? "text-success" : "text-primary")"></i>
+                                                    <h6 class="fw-bold mb-0">KẾT QUẢ: HỒ SƠ ĐÃ ĐƯỢC PHÊ DUYỆT BẢN CỨNG</h6>
+                                                </div>
+
+                                                @if (isBuuDien)
+                                                {
+                                                    <div class="small ps-4">
+                                                        <p class="mb-1">Cán bộ đã hoàn tất bản in đóng dấu đỏ và bàn giao bưu cục phát.</p>
+                                                        <div class="p-2 bg-white rounded border my-2">
+                                                            <span class="text-muted d-block small">Mã bưu gửi / Mã vận đơn theo dõi:</span>
+                                                            <div class="fs-6 fw-bold text-success font-monospace">
+                                                                <i class="fa fa-barcode me-1"></i>@(Model.GhiChuCanBo ?? "Đang cập nhật mã bưu gửi...")
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-muted fst-italic">
+                                                            * Sinh viên sử dụng mã trên để tra cứu tiến độ bưu gửi trên website bưu điện và chú ý điện
+                                                            thoại khi shipper liên hệ.
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="small ps-4">
+                                                        <p class="mb-1">Bản cứng có dấu đỏ tươi đã được chuẩn bị xong tại phòng Một cửa.</p>
+                                                        <div class="p-2 bg-white rounded border my-2">
+                                                            <span class="text-muted d-block small">Lịch hẹn &amp; Hướng dẫn nhận kết quả:</span>
+                                                            <div class="text-primary fw-bold">
+                                                                <i class="fa fa-calendar-check me-1"></i>@(Model.GhiChuCanBo ?? "Mời sinh viên mang theo thẻ sinh viên đến phòng Một cửa nhận kết quả trong giờ hành chính.")
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-muted fst-italic">
+                                                            * Giờ làm việc: 08:00 - 11:30 &amp; 13:30 - 17:00 (Thứ 2 đến Thứ 6).
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                        else if (Model.TrangThai == "Từ chối")
+                                        {
+                                            <div class="alert alert-danger border shadow-sm mt-3 mb-0">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <i class="fa fa-times-circle fs-4 me-2 text-danger"></i>
+                                                    <h6 class="fw-bold mb-0">HỒ SƠ KHÔNG ĐƯỢC DUYỆT</h6>
+                                                </div>
+                                                <div class="ps-4 small">
+                                                    <strong>Lý do từ chối giải quyết:</strong>
+                                                    <div class="mt-1 p-2 bg-white rounded border text-danger">
+                                                        @(Model.GhiChuCanBo ?? "Hồ sơ chưa hợp lệ hoặc thiếu giấy tờ theo quy định.")
+                                                    </div>
+                                                    <span class="text-muted d-block mt-2">Vui lòng nộp lại hồ sơ mới và bổ sung đầy đủ thông tin yêu
+                                                        cầu.</span>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <!-- ================= CỘT PHẢI: TIẾN ĐỘ THỜI GIAN XỬ LÝ ================= -->
+                                    <div class="col-lg-4">
+                                        <div class="card border-0 shadow-sm p-4 bg-white sticky-top rounded-3" style="top: 80px;">
+                                            <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                                                <i class="fa fa-history text-primary me-2"></i>Tiến độ giải quyết
+                                            </h5>
+
+                                            <div class="small mb-3">
+                                                <div class="text-muted">Cán bộ phụ trách:</div>
+                                                <strong class="text-dark">@(Model.MaCanBoXuLy ?? "Đang chờ phân công")</strong>
+                                            </div>
+
+                                            <div class="small mb-3">
+                                                <div class="text-muted">Thời điểm nộp:</div>
+                                                <strong class="text-dark">@Model.NgayNop?.ToString("dd/MM/yyyy HH:mm:ss")</strong>
+                                            </div>
+
+                                            @if (Model.NgayHoanThanh != null)
+                                            {
+                                                <div class="small mb-3">
+                                                    <div class="text-muted">Thời điểm hoàn thành:</div>
+                                                    <strong class="text-success">@Model.NgayHoanThanh?.ToString("dd/MM/yyyy HH:mm:ss")</strong>
+                                                </div>
+                                            }
+
+                                            <hr class="my-3">
+
+                                            <!-- Timeline dòng thời gian -->
+                                            <div class="small fw-bold text-secondary mb-3 text-uppercase">Nhật ký xử lý chi tiết</div>
+
+                                            @if (Model.LichSuXuLy != null && Model.LichSuXuLy.Any())
+                                            {
+                                                <div class="position-relative ps-3 border-start border-2 border-primary border-opacity-50">
+                                                    @foreach (var log in Model.LichSuXuLy.OrderByDescending(l => l.NgayThucHien))
+                                                    {
+                                                        <div class="mb-3 position-relative">
+                                                            <i class="fa fa-circle text-primary position-absolute"
+                                                               style="left: -22px; top: 3px; font-size: 0.75rem;"></i>
+                                                            <div class="text-muted small" style="font-size: 0.75rem;">
+                                                                @log.NgayThucHien?.ToString("dd/MM/yyyy HH:mm")
+                                                            </div>
+                                                            <span class="badge bg-light text-dark border mt-1">@log.TrangThai</span>
+                                                            <div class="small text-secondary mt-1">@log.NoiDung</div>
+                                                            <div class="text-muted fst-italic" style="font-size: 0.75rem;">
+                                                                Bởi: @(log.MaNguoiThucHienNavigation?.HoTen ?? "Hệ thống")
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="small text-muted fst-italic">Hồ sơ mới gửi, đang chờ cán bộ tiếp nhận.</div>
+                                            }
+
+                                            <div class="d-grid gap-2 mt-4">
+                                                <a asp-action="DanhSach" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="fa fa-arrow-left me-1"></i> Quay lại danh sách hồ sơ
+                                                </a>
+                                                <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-sm"
+                                                   style="background-color: #005691;">
+                                                    <i class="fa fa-home me-1"></i> Về trang chủ
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>

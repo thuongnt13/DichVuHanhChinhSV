@@ -1,0 +1,216 @@
+@model List<CongDichVuSinhVien.Models.NguoiDung>
+@{
+    Layout = "_LayoutNiceAdmin";
+    ViewData["Title"] = "Người dùng hệ thống";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1" style="color: #012970;"><i class="bi bi-people text-primary me-2"></i>QUẢN LÝ NGƯỜI
+            DÙNG</h4>
+            <small class="text-muted">Danh sách tài khoản sinh viên, cán bộ một cửa và quản trị viên</small>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">
+            <i class="bi bi-person-plus me-1"></i>Thêm người dùng mới
+        </button>
+    </div>
+
+    <div class="card card-nice p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small">
+                    <tr>
+                        <th class="ps-3">ID</th>
+                        <th>TÊN ĐĂNG NHẬP</th>
+                        <th>HỌ VÀ TÊN</th>
+                        <th>EMAIL</th>
+                        <th>VAI TRÒ</th>
+                        <th class="text-center">TRẠNG THÁI</th>
+                        <th class="text-end pe-3">THAO TÁC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in Model)
+                    {
+                        bool isCanBo = u.CanBo != null;
+                        bool isSinhVien = u.SinhVien != null;
+
+                        <tr id="row_@u.MaNguoiDung">
+                            <td class="ps-3 text-muted">#@u.MaNguoiDung</td>
+                            <td class="fw-bold text-primary font-monospace">@u.TenDangNhap</td>
+                            <td class="fw-semibold">@u.HoTen</td>
+                            <td class="small text-muted">@u.Email</td>
+                            <td>
+                                @if (isCanBo)
+                                {
+                                    <span class="badge bg-warning text-dark">Cán bộ (@u.CanBo?.MaCanBo)</span>
+                                }
+                                else if (isSinhVien)
+                                {
+                                    <span class="badge bg-primary">Sinh viên (@u.SinhVien?.MaSinhVien)</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Quản trị viên (Admin)</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <span
+                                    class="badge @(u.TrangThai == true ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger")"
+                                    id="badge_@u.MaNguoiDung">
+                                    @(u.TrangThai == true ? "Hoạt động" : "Bị khóa")
+                                </span>
+                            </td>
+                            <td class="text-end pe-3">
+                                <button class="btn btn-sm btn-outline-secondary me-1" onclick="toggleLock(@u.MaNguoiDung)"
+                                        title="Khóa / Mở">
+                                    <i class="bi bi-power"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(@u.MaNguoiDung)"
+                                        title="Sửa"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteItem(@u.MaNguoiDung)"
+                                        title="Xóa"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (ViewBag.TongSoTrang > 1)
+        {
+            <div class="d-flex justify-content-end p-3 border-top">
+                <ul class="pagination pagination-sm mb-0">
+                    @for (int i = 1; i <= ViewBag.TongSoTrang; i++)
+                    {
+                        <li class="page-item @(i == ViewBag.TrangHienTai ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { trang = i, tuKhoa = ViewBag.TuKhoa })">@i</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+
+    <!-- MODAL AJAX NGƯỜI DÙNG -->
+    <div class="modal fade" id="modalUser" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h6 class="modal-title fw-bold" id="modalTitle">TÀI KHOẢN NGƯỜI DÙNG</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body row g-3">
+                    <input type="hidden" id="txtUserId" value="0" />
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Tên đăng nhập *</label>
+                        <input type="text" id="txtUsername" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Mật khẩu (Để trống nếu giữ nguyên)</label>
+                        <input type="password" id="txtPassword" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Họ và tên *</label>
+                        <input type="text" id="txtFullName" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Email *</label>
+                        <input type="email" id="txtEmail" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Số điện thoại</label>
+                        <input type="text" id="txtPhone" class="form-control" />
+                    </div>
+                    <div class="col-md-6" id="divRoleSelect">
+                        <label class="form-label small fw-bold">Vai trò hệ thống</label>
+                        <select id="slRole" class="form-select">
+                            <option value="SINH_VIEN">Sinh viên</option>
+                            <option value="CAN_BO">Cán bộ một cửa</option>
+                            <option value="ADMIN">Quản trị viên (Admin)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary btn-sm fw-bold" onclick="saveData()">Lưu người
+                        dùng</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @section Scripts {
+            <script>
+                const modalEl = new bootstrap.Modal(document.getElementById('modalUser'));
+
+                function openAddModal() {
+                    document.getElementById('modalTitle').innerText = "THÊM TÀI KHOẢN MỚI";
+                    document.getElementById('txtUserId').value = 0;
+                    document.getElementById('txtUsername').value = "";
+                    document.getElementById('txtUsername').readOnly = false;
+                    document.getElementById('txtFullName').value = "";
+                    document.getElementById('txtEmail').value = "";
+                    document.getElementById('txtPhone').value = "";
+                    document.getElementById('divRoleSelect').style.display = 'block';
+                    modalEl.show();
+                }
+
+                async function openEditModal(id) {
+                    const res = await fetch(`/Admin/QuanLyNguoiDung/GetJson/${id}`);
+                    const data = await res.json();
+                    document.getElementById('modalTitle').innerText = "CHỈNH SỬA TÀI KHOẢN";
+                    document.getElementById('txtUserId').value = data.maNguoiDung;
+                    document.getElementById('txtUsername').value = data.tenDangNhap;
+                    document.getElementById('txtUsername').readOnly = true;
+                    document.getElementById('txtFullName').value = data.hoTen;
+                    document.getElementById('txtEmail').value = data.email;
+                    document.getElementById('txtPhone').value = data.soDienThoai || "";
+                    document.getElementById('divRoleSelect').style.display = 'none'; // Không đổi vai trò khi sửa
+                    modalEl.show();
+                }
+
+                async function saveData() {
+                    const payload = {
+                        maNguoiDung: parseInt(document.getElementById('txtUserId').value),
+                        tenDangNhap: document.getElementById('txtUsername').value,
+                        matKhau: document.getElementById('txtPassword').value,
+                        hoTen: document.getElementById('txtFullName').value,
+                        email: document.getElementById('txtEmail').value,
+                        soDienThoai: document.getElementById('txtPhone').value,
+                        vaiTro: document.getElementById('slRole').value
+                    };
+                    const res = await fetch('/Admin/QuanLyNguoiDung/SaveAjax', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        Swal.fire('Thành công', result.message, 'success').then(() => location.reload());
+                    }
+                }
+
+                async function toggleLock(id) {
+                    const res = await fetch(`/Admin/QuanLyNguoiDung/ToggleLockAjax/${id}`, { method: 'POST' });
+                    const data = await res.json();
+                    if (data.success) {
+                        const badge = document.getElementById(`badge_${id}`);
+                        badge.className = data.active ? 'badge bg-success-subtle text-success' : 'badge bg-danger-subtle text-danger';
+                        badge.innerText = data.active ? 'Hoạt động' : 'Bị khóa';
+                    }
+                }
+
+                async function deleteItem(id) {
+                    const confirm = await Swal.fire({ title: 'Xác nhận xóa tài khoản?', text: 'Dữ liệu liên quan có thể bị ảnh hưởng!', icon: 'warning', showCancelButton: true });
+                    if (confirm.isConfirmed) {
+                        const res = await fetch(`/Admin/QuanLyNguoiDung/DeleteAjax/${id}`, { method: 'POST' });
+                        const result = await res.json();
+                        if (result.success) {
+                            document.getElementById(`row_${id}`).remove();
+                            Swal.fire('Đã xóa', '', 'success');
+                        }
+                    }
+                }
+            </script>
+        }

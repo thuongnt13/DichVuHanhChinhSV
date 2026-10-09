@@ -1,0 +1,182 @@
+@model CongDichVuSinhVien.Models.NopHoSoViewModel
+@{
+    ViewData["Title"] = "Nộp hồ sơ: " + Model.TenDichVu;
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a asp-controller="ThuTuc" asp-action="ChiTiet"
+                                               asp-route-id="@Model.MaDichVu">@Model.TenDichVu</a></li>
+                <li class="breadcrumb-item active">Nộp hồ sơ trực tuyến</li>
+            </ol>
+        </nav>
+
+        <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-header py-3 text-white" style="background-color: #002b5b;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-uppercase">
+                        <i class="fa fa-file-signature me-2 text-info"></i>Đơn đề nghị giải quyết thủ tục trực tuyến
+                    </h5>
+                    <span class="badge bg-light text-primary">@Model.KyHieuDichVu</span>
+                </div>
+            </div>
+
+            <div class="card-body p-4 bg-white">
+                <form asp-action="NopHoSo" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="MaDichVu" />
+                    <input type="hidden" asp-for="TenDichVu" />
+                    <input type="hidden" asp-for="KyHieuDichVu" />
+                    <input type="hidden" asp-for="DonViXuLy" />
+
+                    <!-- THÔNG TIN THỦ TỤC -->
+                    <div class="alert alert-light border-start border-4 border-primary p-3 mb-4">
+                        <h6 class="fw-bold text-primary mb-1">@Model.TenDichVu</h6>
+                        <div class="small text-muted">
+                            Đơn vị thụ lý: <b>@Model.DonViXuLy</b> |
+                            Thời gian giải quyết: <b>@(Model.ThoiGianXuLyNgay ?? 2) ngày làm việc</b> |
+                            Lệ phí: <b class="text-danger">@(Model.LePhi == null || Model.LePhi == 0 ? "Miễn phí" :
+                                                        Model.LePhi.Value.ToString("N0") + " VNĐ")</b>
+                        </div>
+                    </div>
+
+                    <!-- 1. THÔNG TIN SINH VIÊN -->
+                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="fa fa-user me-2 text-primary"></i>1. Thông tin sinh viên đề nghị
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted">Họ và tên</label>
+                            <input type="text" class="form-control bg-light" value="@Model.HoTen" readonly />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted">Mã số sinh viên (MSSV)</label>
+                            <input type="text" class="form-control bg-light fw-bold text-primary" value="@Model.MaSinhVien"
+                                   readonly />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted">Lớp học</label>
+                            <input type="text" class="form-control bg-light" value="@Model.LopHoc" readonly />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted">Khoa / Viện</label>
+                            <input type="text" class="form-control bg-light" value="@Model.KhoaVien" readonly />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted">Email liên hệ</label>
+                            <input type="text" class="form-control bg-light" value="@Model.Email" readonly />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted">Số điện thoại</label>
+                            <input type="text" class="form-control bg-light" value="@Model.SoDienThoai" readonly />
+                        </div>
+                    </div>
+
+                    <!-- 2. PHƯƠNG THỨC NHẬN BẢN CỨNG CÓ DẤU ĐỎ -->
+                    <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="fa fa-shipping-fast me-2 text-primary"></i>2. Hình thức nhận kết quả (Bản giấy có dấu đỏ
+                        tươi)
+                    </h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded-3 bg-light h-100">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" asp-for="HinhThucNhan" value="TrucTiep"
+                                           id="optTrucTiep" checked onchange="toggleBuuDien(false)">
+                                    <label class="form-check-label fw-bold text-dark" for="optTrucTiep">
+                                        <i class="fa fa-building text-primary me-1"></i> Nhận trực tiếp tại bộ phận Một cửa
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block ps-4 mt-1">Cán bộ chuẩn bị xong bản cứng. Sinh viên mang
+                                    thẻ SV đến quầy tiếp nhận để lấy trực tiếp.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded-3 bg-light h-100">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" asp-for="HinhThucNhan" value="BuuDien"
+                                               id="optBuuDien" onchange="toggleBuuDien(true)">
+                                        <label class="form-check-label fw-bold text-success" for="optBuuDien">
+                                            <i class="fa fa-truck text-success me-1"></i> Gửi chuyển phát nhanh qua Bưu điện
+                                            (EMS)
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block ps-4 mt-1">Gửi bản giấy niêm phong về tận nhà theo địa chỉ.
+                                        Cước bưu điện sinh viên thanh toán khi nhận thư (COD).</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- KHỐI NHẬP ĐỊA CHỈ NHẬN BƯU ĐIỆN (ẨN/HIỆN QUA JS) -->
+                            <div id="khuVucBuuDien" class="p-3 mb-4 rounded border border-success bg-white shadow-sm"
+                                 style="display: none;">
+                                <h6 class="fw-bold text-success mb-3">
+                                    <i class="fa fa-map-marker-alt me-1"></i> Thông tin nhận bưu gửi chuyển phát nhanh
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Họ tên người nhận thư <span
+                                            class="text-danger">*</span></label>
+                                            <input asp-for="HoTenNguoiNhan" class="form-control" value="@Model.HoTen"
+                                                   placeholder="Họ tên người trực tiếp nhận thư..." />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-semibold">Số điện thoại nhận hàng <span
+                                                class="text-danger">*</span></label>
+                                                <input asp-for="SoDienThoaiNhan" class="form-control" value="@Model.SoDienThoai"
+                                                       placeholder="Số điện thoại shipper gọi..." />
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label small fw-semibold">Địa chỉ chi tiết nhận thư <span
+                                                    class="text-danger">*</span></label>
+                                                    <input asp-for="DiaChiNhan" class="form-control"
+                                                           placeholder="Số nhà, ngõ/đường, Phường/Xã, Quận/Huyện, Tỉnh/Thành phố..." />
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="form-label small text-muted">Ghi chú giao hàng (nếu có)</label>
+                                                    <input asp-for="GhiChuGiaoHang" class="form-control"
+                                                           placeholder="Ví dụ: Gọi trước khi giao, giao giờ hành chính..." />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 3. NỘI DUNG YÊU CẦU & ĐÍNH KÈM -->
+                                        <h6 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                                            <i class="fa fa-edit me-2 text-primary"></i>3. Nội dung đề nghị &amp; Giấy tờ đính kèm
+                                        </h6>
+                                        <div class="mb-3">
+                                            <label asp-for="LyDoXin" class="form-label fw-semibold">Lý do xin cấp giấy <span
+                                                class="text-danger">*</span></label>
+                                                <textarea asp-for="LyDoXin" rows="4" class="form-control"
+                                                          placeholder="Trình bày cụ thể mục đích (Ví dụ: Em cần xin Giấy xác nhận sinh viên để nộp hồ sơ xin việc tại công ty...)"></textarea>
+                                                <span asp-validation-for="LyDoXin" class="text-danger small"></span>
+                                            </div>
+
+                                            <div class="mb-4">
+                                                <label asp-for="FileDinhKem" class="form-label fw-semibold">Tệp minh chứng đính kèm (nếu có)</label>
+                                                <input asp-for="FileDinhKem" type="file" class="form-control" />
+                                                <div class="form-text small text-muted">Chấp nhận: .pdf, .docx, .jpg, .png (Tối đa 10MB).</div>
+                                            </div>
+
+                                            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                                <a asp-controller="ThuTuc" asp-action="ChiTiet" asp-route-id="@Model.MaDichVu"
+                                                   class="btn btn-outline-secondary px-4">Hủy</a>
+                                                <button type="submit" class="btn btn-primary px-4 fw-bold" style="background-color: #005691;">
+                                                    <i class="fa fa-paper-plane me-1"></i> Gửi hồ sơ trực tuyến
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @section Scripts {
+                                <script>
+                                    function toggleBuuDien(hienThi) {
+                                        const el = document.getElementById('khuVucBuuDien');
+                                        el.style.display = hienThi ? 'block' : 'none';
+                                    }
+                                </script>
+                            }
